@@ -1,0 +1,32 @@
+# Environment & API keys
+.env
+*.env
+api.env
+
+# Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Databases & Vector DBs
+chroma_db/
+*.sqlite
+*.sqlite3
+*.db
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ipynb_checkpoints/
+
+# IDE & OS generated files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini

@@ -82,6 +82,8 @@ st.markdown("""
         }
     </style>
 """, unsafe_allow_html=True)
+load_dotenv(dotenv_path='api.env')
+load_dotenv()
 
 class ApiRotator:
     """Administra múltiples claves de API para Gemini y OpenAI para rotar automáticamente ante límites de cuota."""
@@ -91,13 +93,25 @@ class ApiRotator:
         key_names = [f"GEMINI_API_KEY_{i}" for i in range(1, 11)] + ["GOOGLE_API_KEY"]
         for key_name in key_names:
             val = os.getenv(key_name)
-            if val and val not in [k[1] for k in self.keys]:
+            if not val and hasattr(st, "secrets"):
+                try:
+                    if key_name in st.secrets:
+                        val = st.secrets[key_name]
+                except Exception:
+                    pass
+            if val and val.strip() and val not in [k[1] for k in self.keys]:
                 # Usamos gemini-flash-lite-latest para evitar límites diarios reducidos de gemini-2.5-flash y gemini-3.5-flash
-                self.keys.append(("gemini", val, "gemini-flash-lite-latest"))
+                self.keys.append(("gemini", val.strip(), "gemini-flash-lite-latest"))
         # Cargar clave de OpenAI como fallback para el LLM
         openai_key = os.getenv("OPENAI_API_KEY")
-        if openai_key:
-            self.keys.append(("openai", openai_key, "gpt-4o-mini"))
+        if not openai_key and hasattr(st, "secrets"):
+            try:
+                if "OPENAI_API_KEY" in st.secrets:
+                    openai_key = st.secrets["OPENAI_API_KEY"]
+            except Exception:
+                pass
+        if openai_key and openai_key.strip():
+            self.keys.append(("openai", openai_key.strip(), "gpt-4o-mini"))
         self.idx = 0
 
     def get_current_provider(self):
@@ -140,7 +154,6 @@ class ApiRotator:
         return False
 
 # Inicializar rotador global
-load_dotenv(dotenv_path='api.env')
 api_rotator = ApiRotator()
 api_key = api_rotator.get_current_key()
 if api_key and api_rotator.get_current_provider() == "gemini":
@@ -217,8 +230,20 @@ def inicializar_asistente():
     """Carga la clave API, conecta a ChromaDB y compila el agente en LangGraph con memoria."""
     # Verificar clave API del rotador
     api_key_act = api_rotator.get_current_key()
+    provider_act = api_rotator.get_current_provider()
     if not api_key_act:
-        st.error("No se encontró la clave API de Gemini en api.env o variables de entorno.")
+        st.error("No se encontró ninguna clave API en `api.env`, `.env` ni en variables de entorno / secrets de Streamlit.")
+        return None
+
+    if provider_act == "gemini" and not api_key_act.startswith("AIzaSy"):
+        st.error(
+            f"❌ **Clave API de Gemini no válida**: La clave detectada (`{api_key_act[:8]}...`) no tiene el formato estándar de Google Gemini.\n\n"
+            "Las claves oficiales de Google AI Studio siempre comienzan por **`AIzaSy...`**.\n\n"
+            "👉 **Cómo solucionarlo:**\n"
+            "1. Ve a [Google AI Studio](https://aistudio.google.com/) y genera una clave gratuita ('Get API key').\n"
+            "2. Abre o crea el archivo `api.env` en la raíz de tu proyecto.\n"
+            "3. Añade la línea: `GEMINI_API_KEY_1=AIzaSyTuClaveCompletaAqui`"
+        )
         return None
         
     # Ruta local de ChromaDB
