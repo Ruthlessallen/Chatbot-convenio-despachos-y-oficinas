@@ -11,12 +11,6 @@ ENV/
 env.bak/
 venv.bak/
 
-# Databases & Vector DBs
-chroma_db/
-*.sqlite
-*.sqlite3
-*.db
-
 # Python bytecode & cache
 __pycache__/
 *.py[cod]
