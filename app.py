@@ -234,17 +234,6 @@ def inicializar_asistente():
     if not api_key_act:
         st.error("No se encontró ninguna clave API en `api.env`, `.env` ni en variables de entorno / secrets de Streamlit.")
         return None
-
-    if provider_act == "gemini" and not api_key_act.startswith("AIzaSy"):
-        st.error(
-            f"❌ **Clave API de Gemini no válida**: La clave detectada (`{api_key_act[:8]}...`) no tiene el formato estándar de Google Gemini.\n\n"
-            "Las claves oficiales de Google AI Studio siempre comienzan por **`AIzaSy...`**.\n\n"
-            "👉 **Cómo solucionarlo:**\n"
-            "1. Ve a [Google AI Studio](https://aistudio.google.com/) y genera una clave gratuita ('Get API key').\n"
-            "2. Abre o crea el archivo `api.env` en la raíz de tu proyecto.\n"
-            "3. Añade la línea: `GEMINI_API_KEY_1=AIzaSyTuClaveCompletaAqui`"
-        )
-        return None
         
     # Ruta local de ChromaDB
     chroma_db_dir = "chroma_db"
